@@ -22,9 +22,24 @@ function mapColor(colorHex) {
     return COLOR_MAP[upper] || upper;
 }
 
+function waitForDocxLibrary(timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        const startTime = Date.now();
+        const checkInterval = setInterval(() => {
+            if (window.docx) {
+                clearInterval(checkInterval);
+                resolve(window.docx);
+            } else if (Date.now() - startTime > timeout) {
+                clearInterval(checkInterval);
+                reject(new Error("La librairie docx n'a pas pu être chargée dans le délai imparti."));
+            }
+        }, 100);
+    });
+}
+
 export async function buildDocx(classifiedBlocks) {
-    const D = window.docx;
-    if (!D) throw new Error("La librairie docx n'est pas chargée.");
+    const D = await waitForDocxLibrary();
+    console.log("docx library loaded successfully");
 
     const children = [];
 

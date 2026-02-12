@@ -34,12 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    dropZone.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log("Dropzone clicked, triggering file input");
-        fileInput.click();
-    });
+    // File input is now an overlay, so clicking anywhere on dropZone triggers it naturally
+    // We just need to handle the change event
 
     dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
