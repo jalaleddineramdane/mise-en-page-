@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Doc Converter</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+    <script>
+        // Load PDF.js as global
+        window.pdfjsReady = import("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs").then(mod => {
+            window.pdfjsLib = mod;
+            mod.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs";
+        });
+    </script>
+    <!-- JSZip for PPTX parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- docx library for DOCX generation -->
+    <script src="https://unpkg.com/docx@9.1.1/build/index.umd.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Medical Doc Converter</h1>
+            <p class="subtitle">PDF / PPTX &rarr; DOCX formaté</p>
+            <p class="subtitle-small">100% client-side — aucun serveur, vos fichiers restent sur votre machine</p>
+        </header>
+
+        <div class="upload-zone" id="dropZone">
+            <div class="upload-icon">&#128196;</div>
+            <p class="upload-text">Glissez votre fichier ici</p>
+            <p class="upload-hint">ou cliquez pour sélectionner</p>
+            <p class="upload-formats">PDF, PPTX — max 50 Mo</p>
+            <input type="file" id="fileInput" accept=".pdf,.pptx" hidden>
+        </div>
+
+        <div class="file-info" id="fileInfo" style="display:none;">
+            <span class="file-name" id="fileName"></span>
+            <span class="file-size" id="fileSize"></span>
+            <button class="btn-remove" id="removeFile">&times;</button>
+        </div>
+
+        <button class="btn-convert" id="convertBtn" disabled>
+            Convertir en DOCX
+        </button>
+
+        <div class="progress-container" id="progressContainer" style="display:none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-text" id="progressText">Conversion en cours...</p>
+        </div>
+
+        <div class="error-msg" id="errorMsg" style="display:none;"></div>
+
+        <div class="specs">
+            <h3>Formatage appliqué automatiquement</h3>
+            <ul>
+                <li><span class="color-dot" style="background:#E97031"></span> Titre matière — 16pt Orange</li>
+                <li><span class="color-dot" style="background:#EE0000"></span> Parties principales — 12-14pt Rouge</li>
+                <li><span class="color-dot" style="background:#00AF50"></span> Sections numérotées — 11pt Vert</li>
+                <li><span class="color-dot" style="background:#006FC0"></span> Sous-sections cliniques — 10pt Bleu</li>
+                <li><span class="color-dot" style="background:#9F2B92"></span> Labels d'examen — 10pt Violet</li>
+                <li><span class="color-dot" style="background:#E97031"></span> En-têtes tableaux — 10pt Orange</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>Police : Aptos | Format : A4 | Marges réduites | Compact</p>
+        </footer>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
