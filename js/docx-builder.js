@@ -5,13 +5,6 @@
 
 import { LEVELS, BODY_STYLE, PAGE, COLOR_MAP } from "./config.js";
 
-const {
-    Document, Paragraph, TextRun, Packer, HeadingLevel,
-    AlignmentType, convertInchesToTwip, SectionType,
-    PageOrientation, WidthType, Header, Footer,
-    Tab, TabStopPosition, TabStopType,
-} = window.docx;
-
 function hexToColor(hex) {
     return hex.replace("#", "");
 }
@@ -24,29 +17,37 @@ function ptToHalfPt(pt) {
     return pt * 2;
 }
 
+function mapColor(colorHex) {
+    const upper = colorHex.toUpperCase().replace("#", "");
+    return COLOR_MAP[upper] || upper;
+}
+
 export async function buildDocx(classifiedBlocks) {
+    const D = window.docx;
+    if (!D) throw new Error("La librairie docx n'est pas chargée.");
+
     const children = [];
 
     for (const block of classifiedBlocks) {
         if (block.level === "image") {
-            children.push(createImagePlaceholder(block));
+            children.push(makeImagePlaceholder(D, block));
         } else if (block.level === "body") {
-            children.push(createBodyParagraph(block));
+            children.push(makeBody(D, block));
         } else if (typeof block.level === "number") {
-            children.push(createHeading(block, block.level));
+            children.push(makeHeading(D, block, block.level));
         } else {
-            children.push(createBodyParagraph(block));
+            children.push(makeBody(D, block));
         }
     }
 
-    const doc = new Document({
+    const doc = new D.Document({
         sections: [{
             properties: {
                 page: {
                     size: {
                         width: mmToTwip(PAGE.widthMm),
                         height: mmToTwip(PAGE.heightMm),
-                        orientation: PageOrientation.PORTRAIT,
+                        orientation: D.PageOrientation.PORTRAIT,
                     },
                     margin: {
                         top: mmToTwip(PAGE.marginTopMm),
@@ -60,31 +61,22 @@ export async function buildDocx(classifiedBlocks) {
         }],
     });
 
-    const blob = await Packer.toBlob(doc);
+    const blob = await D.Packer.toBlob(doc);
     return blob;
 }
 
-function createHeading(block, level) {
+function makeHeading(D, block, level) {
     const spec = LEVELS[level] || BODY_STYLE;
-
-    // Spacing before headings (compact)
     let spaceBefore, spaceAfter;
-    if (level <= 1) {
-        spaceBefore = 80;  // ~4pt in twips
-        spaceAfter = 20;
-    } else if (level === 2) {
-        spaceBefore = 60;
-        spaceAfter = 20;
-    } else {
-        spaceBefore = 40;
-        spaceAfter = 0;
-    }
+    if (level <= 1) { spaceBefore = 80; spaceAfter = 20; }
+    else if (level === 2) { spaceBefore = 60; spaceAfter = 20; }
+    else { spaceBefore = 40; spaceAfter = 0; }
 
-    return new Paragraph({
-        alignment: AlignmentType.LEFT,
+    return new D.Paragraph({
+        alignment: D.AlignmentType.LEFT,
         spacing: { before: spaceBefore, after: spaceAfter, line: 240 },
         children: [
-            new TextRun({
+            new D.TextRun({
                 text: block.text || "",
                 font: spec.font,
                 size: ptToHalfPt(spec.sizePt),
@@ -95,12 +87,12 @@ function createHeading(block, level) {
     });
 }
 
-function createBodyParagraph(block) {
+function makeBody(D, block) {
     const segments = block.segments || [];
     const children = [];
 
     if (segments.length === 0) {
-        children.push(new TextRun({
+        children.push(new D.TextRun({
             text: block.text || "",
             font: BODY_STYLE.font,
             size: ptToHalfPt(BODY_STYLE.sizePt),
@@ -111,38 +103,37 @@ function createBodyParagraph(block) {
     } else {
         for (const seg of segments) {
             if (!seg.text) continue;
-            const mappedColor = mapColor(seg.colorHex || "000000");
-            const run = new TextRun({
+            const mc = mapColor(seg.colorHex || "000000");
+            children.push(new D.TextRun({
                 text: seg.text,
                 font: BODY_STYLE.font,
                 size: ptToHalfPt(BODY_STYLE.sizePt),
                 bold: seg.isBold || false,
                 italics: seg.isItalic || false,
-                color: hexToColor(mappedColor),
+                color: hexToColor(mc),
                 highlight: seg.highlight ? "yellow" : undefined,
-            });
-            children.push(run);
+            }));
         }
     }
 
-    return new Paragraph({
-        alignment: AlignmentType.LEFT,
+    return new D.Paragraph({
+        alignment: D.AlignmentType.LEFT,
         spacing: { before: 0, after: 0, line: 240 },
         children: children,
     });
 }
 
-function createImagePlaceholder(block) {
+function makeImagePlaceholder(D, block) {
     const idx = block.imageIndex || 0;
     const desc = block.description || `Image ${idx}`;
     const pos = block.position || "inline";
     const text = `[IMAGE ${idx} \u2013 ${desc} \u2013 position : ${pos}]`;
 
-    return new Paragraph({
-        alignment: AlignmentType.LEFT,
+    return new D.Paragraph({
+        alignment: D.AlignmentType.LEFT,
         spacing: { before: 20, after: 20, line: 240 },
         children: [
-            new TextRun({
+            new D.TextRun({
                 text: text,
                 font: "Aptos",
                 size: ptToHalfPt(9),
@@ -151,9 +142,4 @@ function createImagePlaceholder(block) {
             }),
         ],
     });
-}
-
-function mapColor(colorHex) {
-    const upper = colorHex.toUpperCase().replace("#", "");
-    return COLOR_MAP[upper] || upper;
 }

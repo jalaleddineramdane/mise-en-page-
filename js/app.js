@@ -8,6 +8,8 @@ import { classify } from "./classifier.js";
 import { buildDocx } from "./docx-builder.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("Medical Doc Converter initialized");
+    
     const dropZone = document.getElementById("dropZone");
     const fileInput = document.getElementById("fileInput");
     const fileInfo = document.getElementById("fileInfo");
@@ -22,7 +24,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let selectedFile = null;
 
-    dropZone.addEventListener("click", () => fileInput.click());
+    // Validate required elements exist
+    if (!dropZone || !fileInput) {
+        console.error("Required DOM elements not found");
+        if (errorMsg) {
+            errorMsg.textContent = "Erreur d'initialisation: éléments manquants";
+            errorMsg.style.display = "block";
+        }
+        return;
+    }
+
+    dropZone.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("Dropzone clicked, triggering file input");
+        fileInput.click();
+    });
 
     dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
@@ -35,11 +52,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     dropZone.addEventListener("drop", (e) => {
         e.preventDefault();
+        e.stopPropagation();
         dropZone.classList.remove("dragover");
+        console.log("File dropped, files:", e.dataTransfer.files.length);
         if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
     });
 
-    fileInput.addEventListener("change", () => {
+    fileInput.addEventListener("change", (e) => {
+        console.log("File input changed, files:", fileInput.files.length);
         if (fileInput.files.length > 0) handleFile(fileInput.files[0]);
     });
 
@@ -77,6 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     async function convert(file) {
+        console.log("Starting conversion for:", file.name);
         convertBtn.disabled = true;
         progressContainer.style.display = "block";
         errorMsg.style.display = "none";
