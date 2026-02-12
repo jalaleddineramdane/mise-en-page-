@@ -1,0 +1,12 @@
+# Ignore system files
+.DS_Store
+Thumbs.db
+*.log
+
+# Ignore error screenshots
+error*.png
+error*.jpg
+
+# IDE
+.vscode/
+.idea/

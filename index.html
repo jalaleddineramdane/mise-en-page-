@@ -12,8 +12,8 @@
     </script>
     <!-- JSZip for PPTX parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <!-- docx library for DOCX generation -->
-    <script src="https://cdn.jsdelivr.net/npm/docx@9.1.1/build/index.umd.min.js"></script>
+    <!-- docx library for DOCX generation (local copy for reliability) -->
+    <script src="js/docx.umd.js"></script>
     <script>
         // Verify libraries are loaded
         window.addEventListener('load', function() {
@@ -21,6 +21,9 @@
             console.log('- pdfjsLib:', typeof pdfjsLib !== 'undefined' ? 'loaded' : 'NOT loaded');
             console.log('- JSZip:', typeof JSZip !== 'undefined' ? 'loaded' : 'NOT loaded');
             console.log('- docx:', typeof docx !== 'undefined' ? 'loaded' : 'NOT loaded');
+            if (typeof docx === 'undefined') {
+                console.error('docx library failed to load! Check js/docx.umd.js file');
+            }
         });
     </script>
 </head>
@@ -32,14 +35,13 @@
             <p class="subtitle-small">100% client-side — aucun serveur, vos fichiers restent sur votre machine</p>
         </header>
 
+        <input type="file" id="fileInput" accept=".pdf,.pptx" style="display: none;">
+
         <div class="upload-zone" id="dropZone">
-            <input type="file" id="fileInput" accept=".pdf,.pptx">
-            <div class="upload-content">
-                <div class="upload-icon">📄</div>
-                <p class="upload-text">Glissez votre fichier ici</p>
-                <p class="upload-hint">ou cliquez pour sélectionner</p>
-                <p class="upload-formats">PDF, PPTX — max 50 Mo</p>
-            </div>
+            <div class="upload-icon">📄</div>
+            <p class="upload-text">Glissez votre fichier ici</p>
+            <p class="upload-hint">ou cliquez pour sélectionner</p>
+            <p class="upload-formats">PDF, PPTX — max 50 Mo</p>
         </div>
 
         <div class="file-info" id="fileInfo" style="display:none;">

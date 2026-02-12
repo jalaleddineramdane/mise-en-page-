@@ -27,15 +27,24 @@ document.addEventListener("DOMContentLoaded", () => {
     // Validate required elements exist
     if (!dropZone || !fileInput) {
         console.error("Required DOM elements not found");
+        console.error("dropZone:", dropZone);
+        console.error("fileInput:", fileInput);
         if (errorMsg) {
-            errorMsg.textContent = "Erreur d'initialisation: éléments manquants";
+            errorMsg.textContent = "Erreur d'initialisation: elements manquants";
             errorMsg.style.display = "block";
         }
         return;
     }
 
-    // File input is now an overlay, so clicking anywhere on dropZone triggers it naturally
-    // We just need to handle the change event
+    console.log("Setting up event listeners...");
+
+    // Click on dropZone to open file dialog
+    dropZone.addEventListener("click", (e) => {
+        console.log("DropZone clicked");
+        e.preventDefault();
+        e.stopPropagation();
+        fileInput.click();
+    });
 
     dropZone.addEventListener("dragover", (e) => {
         e.preventDefault();
@@ -59,7 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (fileInput.files.length > 0) handleFile(fileInput.files[0]);
     });
 
-    removeFileBtn.addEventListener("click", () => {
+    removeFileBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         selectedFile = null;
         fileInput.value = "";
         fileInfo.style.display = "none";
@@ -74,9 +84,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function handleFile(file) {
+        console.log("Handling file:", file.name);
         const ext = file.name.split(".").pop().toLowerCase();
         if (!["pdf", "pptx"].includes(ext)) {
-            showError("Format non supporté. Utilisez PDF ou PPTX.");
+            showError("Format non supporte. Utilisez PDF ou PPTX.");
             return;
         }
         if (file.size > 50 * 1024 * 1024) {
@@ -90,6 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
         dropZone.style.display = "none";
         convertBtn.disabled = false;
         errorMsg.style.display = "none";
+        console.log("File selected successfully:", file.name);
     }
 
     async function convert(file) {
@@ -118,15 +130,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // Step 3: Classify
-            updateProgress(60, "Classification de la hiérarchie...");
+            updateProgress(60, "Classification de la hierarchie...");
             const classified = classify(blocks);
 
             // Step 4: Build DOCX
-            updateProgress(80, "Génération du DOCX...");
+            updateProgress(80, "Generation du DOCX...");
             const blob = await buildDocx(classified);
 
             // Step 5: Download
-            updateProgress(100, "Terminé !");
+            updateProgress(100, "Termine !");
             const outputName = file.name.replace(/\.(pdf|pptx)$/i, "_formatted.docx");
             downloadBlob(blob, outputName);
 

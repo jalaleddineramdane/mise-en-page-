@@ -22,18 +22,39 @@ function mapColor(colorHex) {
     return COLOR_MAP[upper] || upper;
 }
 
-function waitForDocxLibrary(timeout = 10000) {
+function getDocxLibrary() {
+    // Try different possible global names
+    if (window.docx) return window.docx;
+    if (window.Docx) return window.Docx;
+    // Check if it's available under a different property
+    const possibleNames = Object.keys(window).filter(k => 
+        k.toLowerCase().includes('docx') && typeof window[k] === 'object'
+    );
+    console.log('Possible docx library names found:', possibleNames);
+    for (const name of possibleNames) {
+        if (window[name] && (window[name].Document || window[name].Packer)) {
+            console.log('Using library from window.' + name);
+            return window[name];
+        }
+    }
+    return null;
+}
+
+function waitForDocxLibrary(timeout = 15000) {
     return new Promise((resolve, reject) => {
         const startTime = Date.now();
         const checkInterval = setInterval(() => {
-            if (window.docx) {
+            const lib = getDocxLibrary();
+            if (lib) {
                 clearInterval(checkInterval);
-                resolve(window.docx);
+                console.log('docx library found:', lib);
+                resolve(lib);
             } else if (Date.now() - startTime > timeout) {
                 clearInterval(checkInterval);
-                reject(new Error("La librairie docx n'a pas pu être chargée dans le délai imparti."));
+                console.error('Available window properties:', Object.keys(window).slice(0, 50));
+                reject(new Error("La librairie docx n'a pas pu etre chargee. Verifiez votre connexion internet et rafraichissez la page."));
             }
-        }, 100);
+        }, 200);
     });
 }
 
